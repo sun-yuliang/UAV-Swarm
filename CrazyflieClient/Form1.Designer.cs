@@ -34,6 +34,7 @@
             this.button2 = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.textBox3 = new System.Windows.Forms.TextBox();
+            this.checkbox_keyboard = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // textBox1
@@ -91,11 +92,22 @@
             this.textBox3.TabIndex = 5;
             this.textBox3.WordWrap = false;
             // 
+            // checkbox_keyboard
+            // 
+            this.checkbox_keyboard.AutoSize = true;
+            this.checkbox_keyboard.Location = new System.Drawing.Point(221, 41);
+            this.checkbox_keyboard.Name = "checkbox_keyboard";
+            this.checkbox_keyboard.Size = new System.Drawing.Size(120, 16);
+            this.checkbox_keyboard.TabIndex = 6;
+            this.checkbox_keyboard.Text = "Keyboard Control";
+            this.checkbox_keyboard.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.checkbox_keyboard);
             this.Controls.Add(this.textBox3);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button2);
@@ -119,6 +131,7 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.CheckBox checkbox_keyboard;
     }
 }
 

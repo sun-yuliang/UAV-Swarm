@@ -21,7 +21,7 @@ namespace CrazyflieClient
         };
 
         static string[] rate = { "250K", "1M", "2M" };
-        const int NUMS = 2;
+        const int NUMS = 1;
 
         public Form1()
         {
@@ -110,9 +110,9 @@ namespace CrazyflieClient
 
             public Pos(float x, float y, float z)
             {
-                this.x = x;
-                this.y = y;
-                this.z = z;
+                this.x = x >= 0 ? x : 0;
+                this.y = y >= 0 ? y : 0;
+                this.z = z >= 0 ? z : 0;
             }
         }
 
@@ -125,11 +125,12 @@ namespace CrazyflieClient
         private void SendSetPoint()
         {
             Thread.Sleep(5000);
+            Console.WriteLine("Let's move out.");
             while (true)
             {
                 for (int i = 0; i < NUMS; i++)
                     cf[i].send_packet(CommanderPacket(pos[i].y, pos[i].x, 0, (ushort)(pos[i].z * 1000)));
-                Thread.Sleep(100);
+                Thread.Sleep(50);
             }
             for (int i = 0; i < NUMS; i++)
                 cf[i].close_link();
@@ -189,8 +190,8 @@ namespace CrazyflieClient
                 cf[i] = new Crazyflie();
             }
 
-            RegisterHotKey(Handle, 100, KeyModifiers.None, Keys.Up);
-            RegisterHotKey(Handle, 101, KeyModifiers.None, Keys.Down);
+            RegisterHotKey(Handle, (int)Keys.Up, KeyModifiers.None, Keys.Up);
+            RegisterHotKey(Handle, (int)Keys.Down, KeyModifiers.None, Keys.Down);
         }
 
         protected override void WndProc(ref Message m)
@@ -199,13 +200,13 @@ namespace CrazyflieClient
             switch (m.Msg)
             {
                 case WM_HOTKEY:
-                    switch (m.WParam.ToInt32())
+                    switch ((Keys)m.WParam.ToInt32())
                     {
-                        case 100:
+                        case Keys.Up:
                             if(thrust < 50000)
                                 thrust += 1000;
                             break;
-                        case 101:
+                        case Keys.Down:
                             if (thrust > 0)
                                 thrust -= 1000;
                             break;
@@ -213,6 +214,54 @@ namespace CrazyflieClient
                     break;
             }
             base.WndProc(ref m);
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            const int WM_KEYDOWN = 0x0100;
+
+            if (checkbox_keyboard.Checked)
+            {
+                if (msg.Msg == WM_KEYDOWN && msg.HWnd == checkbox_keyboard.Handle)
+                {
+                    bool changed = true;
+                    switch (keyData)
+                    {
+                        case Keys.W:
+                            pos[0].x += 0.1f;
+                            break;
+                        case Keys.S:
+                            pos[0].x -= 0.1f;
+                            break;
+                        case Keys.A:
+                            pos[0].y += 0.1f;
+                            break;
+                        case Keys.D:
+                            pos[0].y -= 0.1f;
+                            break;
+                        case Keys.Q:
+                            break;
+                        case Keys.E:
+                            break;
+                        case Keys.ShiftKey | Keys.Shift:
+                            pos[0].z -= 0.1f;
+                            break;
+                        case Keys.Space:
+                            pos[0].z += 0.1f;
+                            break;
+                        default:
+                            changed = false;
+                            break;
+                    }
+                    if (changed)
+                    {
+                        textBox3.Clear();
+                        for (int i = 0; i < NUMS; i++)
+                            textBox3.AppendText(string.Format("{0} {1} {2} {3}" + Environment.NewLine, i, pos[i].x, pos[i].y, pos[i].z));
+                    }
+                }
+            }
+            return true;
         }
 
         private void textBox2_KeyDown(object sender, KeyEventArgs e)
