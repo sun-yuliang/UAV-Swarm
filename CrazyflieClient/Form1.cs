@@ -17,11 +17,13 @@ namespace CrazyflieClient
         string[] uri =
         {
             "radio://0/100/2M/E7E7E7E703",
-            "radio://0/100/2M/E7E7E7E704"
+            "radio://0/100/2M/E7E7E7E704",
+            "radio://0/100/2M/E7E7E7E705",
+            "radio://0/100/2M/E7E7E7E706"
         };
 
         static string[] rate = { "250K", "1M", "2M" };
-        const int NUMS = 1;
+        const int NUMS = 4;
 
         public Form1()
         {
@@ -41,20 +43,21 @@ namespace CrazyflieClient
             if (comboBox1.Items.Count != 0)
             {
                 comboBox1.SelectedIndex = 0;
-                button2.Enabled = true;
+                button_connect.Enabled = true;
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            button2.Enabled = false;
+            button_connect.Enabled = false;
             for (int i = 0; i < NUMS; i++)
             {
                 textBox3.AppendText(string.Format("{0} {1} {2} {3}" + Environment.NewLine, i, pos[i].x, pos[i].y, pos[i].z));
                 cf[i].open_link(uri[i]);
             }
-            Thread th = new Thread(SendSetPoint);
-            th.Start();
+            button_fly.Enabled = true;
+//             Thread th = new Thread(SendSetPoint);
+//             th.Start();
         }
 
         CRTPPacket CommanderPacket(float roll, float pitch, float yaw, ushort thrust)
@@ -118,13 +121,15 @@ namespace CrazyflieClient
 
         Pos[] pos = new Pos[]
         {
-            new Pos(2.85f, 2.00f, 0),
-            new Pos(2.85f, 2.50f, 0)
+            new Pos(1f, 1f, 0),
+            new Pos(3.5f, 1f, 0),
+            new Pos(1f, 11f, 0),
+            new Pos(3.5f, 11f, 0)
         };
         
         private void SendSetPoint()
         {
-            Thread.Sleep(5000);
+            //Thread.Sleep(5000);
             Console.WriteLine("Let's move out.");
             while (true)
             {
@@ -134,7 +139,7 @@ namespace CrazyflieClient
             }
             for (int i = 0; i < NUMS; i++)
                 cf[i].close_link();
-            Invoke(new Action(() => { button2.Enabled = true; }));
+            Invoke(new Action(() => { button_connect.Enabled = true; }));
         }
 /*
         private void SendVelocity()
@@ -260,8 +265,9 @@ namespace CrazyflieClient
                             textBox3.AppendText(string.Format("{0} {1} {2} {3}" + Environment.NewLine, i, pos[i].x, pos[i].y, pos[i].z));
                     }
                 }
+                return true;
             }
-            return true;
+            return false;
         }
 
         private void textBox2_KeyDown(object sender, KeyEventArgs e)
@@ -283,6 +289,64 @@ namespace CrazyflieClient
         {
             // Force exit
             Environment.Exit(0);
+        }
+
+        class Command
+        {
+            public int id;
+            public float x;
+            public float y;
+            public float z;
+
+            public Command(int id, float x, float y, float z)
+            {
+                this.id = id;
+                this.x = x >= 0 ? x : 0;
+                this.y = y >= 0 ? y : 0;
+                this.z = z >= 0 ? z : 0;
+            }
+        }
+        List<Command> commands = new List<Command>();
+
+        private void SequenceThread()
+        {
+            Thread.Sleep(5000);
+
+            Thread th2 = new Thread(SendSetPoint);
+            th2.Start();
+
+            for (int i = 0; i < commands.Count; i++)
+            {
+                int id = commands[i].id;
+                if (id == -1)
+                    Thread.Sleep((int)commands[i].x);
+                else
+                    pos[id] = new Pos(commands[i].x, commands[i].y, commands[i].z);
+            }
+        }
+
+        private void button_fly_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                button_fly.Enabled = false;
+                System.IO.Stream file = openFileDialog1.OpenFile();
+                byte[] file_buf = new byte[file.Length];
+                file.Read(file_buf, 0, (int)file.Length);
+                file.Close();
+                string file_string = System.Text.Encoding.Default.GetString(file_buf);
+
+                string[] lines = file_string.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                commands.Clear();
+                foreach (string line in lines)
+                {
+                    string[] param = line.Split(' ');
+                    commands.Add(new Command(int.Parse(param[0]), float.Parse(param[1]), float.Parse(param[2]), float.Parse(param[3])));
+                }
+
+                Thread th1 = new Thread(SequenceThread);
+                th1.Start();
+            }
         }
     }
 }
