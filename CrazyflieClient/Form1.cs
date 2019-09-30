@@ -89,6 +89,21 @@ namespace CrazyflieClient
             packet.data = data.ToArray();
             return packet;
         }
+        CRTPPacket SetPointPacket(float x, float y, float z, int yaw)
+        {
+            CRTPPacket packet = new CRTPPacket();
+            packet.port = (byte)CRTPPort.COMMANDER_GENERIC;
+
+            List<byte> data = new List<byte>(17) { 7 };
+            data.AddRange(BitConverter.GetBytes(x));
+            data.AddRange(BitConverter.GetBytes(y));
+            data.AddRange(BitConverter.GetBytes(z));
+            data.AddRange(BitConverter.GetBytes(yaw));
+
+            packet.data = data.ToArray();
+            return packet;
+        }
+
         /*
         private void SendSetPoint2()
         {
@@ -134,7 +149,7 @@ namespace CrazyflieClient
             while (true)
             {
                 for (int i = 0; i < NUMS; i++)
-                    cf[i].send_packet(CommanderPacket(pos[i].y, pos[i].x, 0, (ushort)(pos[i].z * 1000)));
+                    cf[i].send_packet(SetPointPacket(pos[i].x, pos[i].y, pos[i].z, 0));
                 Thread.Sleep(50);
             }
             for (int i = 0; i < NUMS; i++)
